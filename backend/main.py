@@ -81,7 +81,7 @@ def get_contract(exp, strikep, chain):
                     return option_data
 
 # Get Contract from option chain    
-contract = get_contract("2025-08-29", 172.5, calls)
+contract = get_contract("2025-09-26", 172.5, calls)
 #print(contract)
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
@@ -99,33 +99,39 @@ def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
 #p = blackscholes(166.62, 170, 3/365, 0.595, 0.0409)
 #print(p)
 
-def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, types='c'):
+def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, types='c', range_max=0, range_min=0):
     cols = list(range(round(time*365), -1, -1))
     
     # Rows: 30 prices, each +1% increase from previous, bottom = price
-    if types == 'c':
-        pricesi = [under_price * (1.01)**i for i in range(25)]
-        pricesd = [under_price * (0.99)**i for i in range(5)]
-        pricesd = pricesd[::-1]
-        prices = pricesd + pricesi
-    elif types == 'p':
-        pricesi = [under_price * (1.01)**i for i in range(5)]
-        pricesd = [under_price * (0.99)**i for i in range(25)]
-        pricesd = pricesd[::-1]
-        prices = pricesd + pricesi
-    # Flip so bottom is base price
-    prices = prices[::-1]
-    
-    # Create DataFrame (same values across all columns initially)
-    df = pd.DataFrame(np.tile(prices, (len(cols), 1)).T, columns=cols, index=prices)
+    if range_max == 0 and range_min == 0:
+        if types == 'c':
+            pricesi = [round(under_price * (1.01)**i, 2) for i in range(25)]
+            pricesd = [round(under_price * (0.99)**i, 2) for i in range(5)]
+            pricesd = pricesd[::-1]
+            prices = pricesd + pricesi
+        elif types == 'p':
+            pricesi = [round(under_price * (1.01)**i, 2) for i in range(5)]
+            pricesd = [round(under_price * (0.99)**i, 2) for i in range(25)]
+            pricesd = pricesd[::-1]
+            prices = pricesd + pricesi
+    elif range_max > range_min and (range_max > 0 and range_min >= 0):
+        new_range = range_max - range_min
+        increment = new_range/30
+        prices = [round(range_min + increment*i, 2) for i in range(30)]
+    else:
+        print("INVALID RANGE")
 
+    
+    
+    prices = prices[::-1]
+    df = pd.DataFrame(np.tile(prices, (len(cols), 1)).T, columns=cols, index=prices)
     for row_label in df.index:
         for col_label in df.columns:
-            df.at[row_label, col_label] = (blackscholes(row_label, strike_price, col_label/365.00, vol, intrest, types) - option_price)/option_price*100
+            df.at[row_label, col_label] = round((blackscholes(row_label, strike_price, col_label/365.00, vol, intrest, types) - option_price)/option_price*100, 1)
     
     return df
 
-chart = make_heat_map(*contract)
+chart = make_heat_map(*contract, range_max=200, range_min=140)
 print(chart)
 
 
