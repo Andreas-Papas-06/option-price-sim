@@ -81,10 +81,12 @@ def get_contract(exp, strikep, chain):
                     return option_data
 
 # Get Contract from option chain    
-contract = get_contract("2025-09-26", 172.5, calls)
+contract = get_contract("2026-01-16", 190.0, calls)
 #print(contract)
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
+    if time == 0:
+        time = 0.0000001
     d1 = (np.log(under_price/strike_price) + (intrest + vol**2/2)*time)/(vol*np.sqrt(time))
     d2 = d1 - vol*np.sqrt(time)
     try:
@@ -100,7 +102,11 @@ def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
 #print(p)
 
 def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, types='c', range_max=0, range_min=0):
-    cols = list(range(round(time*365), -1, -1))
+    if time*365 < 51:
+        cols = list(range(round(time*365), -1, -1))
+    else:
+        step = round(time*365/50)
+        cols = list(range(round(time*365), -1, -step))
     
     # Rows: 30 prices, each +1% increase from previous, bottom = price
     if range_max == 0 and range_min == 0:
