@@ -81,7 +81,7 @@ def get_contract(exp, strikep, chain):
                     return option_data
 
 # Get Contract from option chain    
-contract = get_contract("2026-01-16", 190.0, calls)
+contract = get_contract("2025-09-05", 180.0, calls)
 #print(contract)
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
@@ -109,15 +109,22 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
         cols = list(range(round(time*365), -1, -step))
     
     # Rows: 30 prices, each +1% increase from previous, bottom = price
+    if time*365 <= 30:
+        percent_inc = 1.005
+        percent_dec = 0.995
+    else:
+        percent_inc = 1.01
+        percent_dec = 0.99
+
     if range_max == 0 and range_min == 0:
         if types == 'c':
-            pricesi = [round(under_price * (1.01)**i, 2) for i in range(25)]
-            pricesd = [round(under_price * (0.99)**i, 2) for i in range(5)]
+            pricesi = [round(under_price * (percent_inc)**i, 2) for i in range(25)]
+            pricesd = [round(under_price * (percent_dec)**i, 2) for i in range(5)]
             pricesd = pricesd[::-1]
             prices = pricesd + pricesi
         elif types == 'p':
-            pricesi = [round(under_price * (1.01)**i, 2) for i in range(5)]
-            pricesd = [round(under_price * (0.99)**i, 2) for i in range(25)]
+            pricesi = [round(under_price * (percent_inc)**i, 2) for i in range(5)]
+            pricesd = [round(under_price * (percent_dec)**i, 2) for i in range(25)]
             pricesd = pricesd[::-1]
             prices = pricesd + pricesi
     elif range_max > range_min and (range_max > 0 and range_min >= 0):
@@ -137,7 +144,7 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
     
     return df
 
-chart = make_heat_map(*contract, range_max=200, range_min=140)
+chart = make_heat_map(*contract)
 print(chart)
 
 
