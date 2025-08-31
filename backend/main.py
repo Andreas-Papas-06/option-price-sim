@@ -6,6 +6,15 @@ from decimal import Decimal
 import numpy as np
 import pandas as pd
 
+def clean_dict(obj):
+    if isinstance(obj, dict):
+        return {k: clean_dict(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_dict(x) for x in obj]
+    elif isinstance(obj, float) and math.isnan(obj):
+        return None
+    else:
+        return obj
 # Get option chain for ticker
 def get_options_chain(ticker):
     stock = yf.Ticker(ticker)
@@ -59,7 +68,7 @@ def get_options_chain(ticker):
     
     return all_calls, all_puts
 
-calls, puts = get_options_chain("AMD")
+#calls, puts = get_options_chain("AMD")
 
 def get_contract(exp, strikep, chain):
     # [Underlying Price, Strike Price, Time to exp, Vol, intrest rate]
@@ -81,7 +90,7 @@ def get_contract(exp, strikep, chain):
                     return option_data
 
 # Get Contract from option chain    
-contract = get_contract("2025-09-05", 180.0, calls)
+#contract = get_contract("2025-09-05", 180.0, calls)
 #print(contract)
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
@@ -144,8 +153,8 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
     
     return df
 
-chart = make_heat_map(*contract)
-print(chart)
+#chart = make_heat_map(*contract)
+#print(chart)
 
 
 
