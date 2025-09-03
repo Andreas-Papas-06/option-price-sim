@@ -1,9 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from backend import main
+from typing import Dict, List
 
 
 api = FastAPI()
+
+class ContractRequest(BaseModel):
+    exp: str
+    strike: float
+    chain: Dict[str, List[dict]] 
+
+class HeatmapRequest(BaseModel):
+    contract: dict   # the contract returned earlier from /contract
+    option_type: str = "c"   # "c" for call, "p" for put
+    range_max: float = 0
+    range_min: float = 0
 
 @api.get('/')
 def root():
@@ -25,3 +37,35 @@ def get_option_chain(ticker: str):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid ticker or error fetching options: {str(e)}")
+
+@api.post('/contract')
+def get_contract(req: ContractRequest):
+    try:
+        contract = main.get_contract(req.exp, req.strike, req.chain)
+        return contract
+    
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching contract: {str(e)}")
+    
+@api.post('/heatmap')
+def generate_heatmap(req: HeatmapRequest):
+    try:
+        contract = req.contract
+
+        df = main.make_heat_map(
+            under_price=contract["under_price"],
+            strike_price=contract["strike_price"],
+            time=contract["time"],
+            vol=contract["vol"],
+            intrest=contract["intrest"],
+            option_price=contract["option_price"],
+            types=req.option_type,
+            range_max=req.range_max,
+            range_min=req.range_min
+        )
+
+        return df.to_dict()
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error generating heatmap: {str(e)}")
+

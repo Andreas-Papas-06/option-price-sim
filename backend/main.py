@@ -77,17 +77,21 @@ def get_contract(exp, strikep, chain):
         if exp == date:
             for contract in chain[date]:
                 if strikep == contract["Strike"]:
-                    option_data.append(contract["Underlying Price"])
-                    option_data.append(contract["Strike"])
                     today = datetime.today().date()
                     exp_datef = datetime.strptime(exp, "%Y-%m-%d").date()
-                    option_data.append(((exp_datef - today).days)/365.00)
-                    option_data.append(float(contract["Implied Volatility"].replace('%', '')) / 100.00)
+                    time = (exp_datef - today).days / 365.0
+                    vol = float(contract["Implied Volatility"].replace('%', '')) / 100.0
                     irx = yf.Ticker("^IRX")
                     rate = irx.history(period="1d")["Close"].iloc[-1] / 100
-                    option_data.append(float(rate))
-                    option_data.append(contract["Last Price"])
-                    return option_data
+
+                    return {
+                        "under_price": contract["Underlying Price"],
+                        "strike_price": contract["Strike"],
+                        "time": time,
+                        "vol": vol,
+                        "intrest": float(rate),
+                        "option_price": contract["Last Price"]
+                    }
 
 # Get Contract from option chain    
 #contract = get_contract("2025-09-05", 180.0, calls)
@@ -153,7 +157,7 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
     
     return df
 
-#chart = make_heat_map(*contract)
+#chart = make_heat_map(**contract)
 #print(chart)
 
 
