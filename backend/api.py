@@ -73,7 +73,11 @@ def generate_heatmap(req: HeatmapRequest):
             range_min=req.range_min
         )
 
-        return df.to_dict()
+        df_reset = df.reset_index()
+        df_melted = df_reset.melt(id_vars=df.index.name or "index", var_name="x", value_name="z")
+        df_melted = df_melted.rename(columns={df.index.name or "index": "y"})
+
+        return df_melted.to_dict(orient="records")
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error generating heatmap: {str(e)}")

@@ -94,7 +94,7 @@ def get_contract(exp, strikep, chain):
                     }
 
 # Get Contract from option chain    
-#contract = get_contract("2025-09-05", 180.0, calls)
+#contract = get_contract("2025-09-26", 180.0, calls)
 #print(contract)
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
