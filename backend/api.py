@@ -35,7 +35,7 @@ def get_option_chain(ticker: str):
     try:
         calls, puts = main.get_options_chain(ticker)
 
-        # Clean NaNs in entire data
+        
         calls = main.clean_dict(calls)
         puts = main.clean_dict(puts)
 
