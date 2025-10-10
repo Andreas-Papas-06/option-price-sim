@@ -72,7 +72,6 @@ def get_options_chain(ticker):
 
 def get_contract(exp, strikep, chain):
     # [Underlying Price, Strike Price, Time to exp, Vol, intrest rate]
-    option_data = []
     for date in chain:
         if exp == date:
             for contract in chain[date]:
@@ -144,8 +143,7 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
         new_range = range_max - range_min
         increment = new_range/30
         prices = [round(range_min + increment*i, 2) for i in range(30)]
-    else:
-        print("INVALID RANGE")
+    
 
     
     

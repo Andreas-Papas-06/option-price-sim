@@ -11,7 +11,9 @@ function App() {
   const [selectedType, setSelectedType] = useState("calls");
   const [contract, setContract] = useState(null);
   const [heatmapData, setHeatmapData] = useState([]);
-
+  const [loading, setLoading] = useState(false);
+  const [rangeMin, setRangeMin] = useState(0);
+  const [rangeMax, setRangeMax] = useState(0);
 
 
 // Clear contract & heatmap when user changes selections
@@ -21,6 +23,7 @@ useEffect(() => {
 }, [selectedExp, selectedStrike, selectedType]);
 
   const fetchOptions = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`http://127.0.0.1:8000/options/${ticker}`);
       setOptionChain(res.data);
@@ -31,6 +34,8 @@ useEffect(() => {
     } catch (err) {
       console.error(err);
       alert("Error fetching option chain: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,8 +65,8 @@ useEffect(() => {
       const res = await axios.post("http://127.0.0.1:8000/heatmap", {
         contract: contract,
         option_type: selectedType === "calls" ? "c" : "p",
-        range_max: 0,
-        range_min: 0,
+        range_max: rangeMax,
+        range_min: rangeMin,
       });
 
       console.log("Heatmap raw data:", res.data);
@@ -139,10 +144,7 @@ useEffect(() => {
     }} 
   />
 </header>
-
-      <br />
-      <br />
-
+      <p style={{fontSize: "10px"}}>*All data is 15 minutes delayed*</p>
       {/* Stock Ticker */}
       <div className="flex flex-col items-center mt-4">
         <h2>Stock Ticker:</h2>
@@ -161,7 +163,31 @@ useEffect(() => {
             className="rounded-full flex items-center justify-center"
             style={{ width: "30px", height: "30px", padding: "5px", border: "none", background: "transparent", borderRadius: "50%"}}
           >
+            {loading ? (
+    // Spinner only
+    <svg
+      className="animate-spin h-5 w-5 text-white"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+  ) : (
             <img src="/media/searchticker.png" alt="search" style={{ width: '35px', height: '35px', verticalAlign: 'middle', borderRadius: "50%"}}/>
+  )}
           </button>
         </div>
       </div>
@@ -172,23 +198,35 @@ useEffect(() => {
           <div className="flex gap-4 mb-2">
             <button
               onClick={() => setSelectedType("calls")}
-              className={`px-3 py-1 rounded ${
+              className={`px-3 py-1 rounded transition-colors ${
                 selectedType === "calls"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200"
+                  ? "bg-[#9ca3af] text-white"
+                  : "bg-[#374151] text-white hover:bg-[#424141ff]"
               }`}
+              style={{
+                      backgroundColor: selectedType === "calls" ? "#7f7f80ff" : "#424141ff", // lighter when active, darker otherwise
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease",
+                     }}
             >
-              Calls
+              Call
             </button>
             <button
               onClick={() => setSelectedType("puts")}
-              className={`px-3 py-1 rounded ${
+              className={`px-3 py-1 rounded transition-colors ${
                 selectedType === "puts"
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-200"
+                  ? "bg-[#9ca3af] text-white"
+                  : "bg-[#374151] text-white hover:bg-[#424141ff]"
               }`}
+              style={{
+                      backgroundColor: selectedType === "puts" ? "#7f7f80ff" : "#424141ff", // lighter when active, darker otherwise
+                      color: "white",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease",
+                     }}
             >
-              Puts
+              Put
             </button>
           </div>
           <h2>Expiration Date:</h2>
@@ -248,8 +286,16 @@ useEffect(() => {
           >
             <strong>Simulate</strong>
           </button>
-        </div>
+        </div> 
       )}
+
+      <footer style={{ position: "fixed", bottom: "0", width: "1600px", height: "100px", background: "#8554ffff" }}>
+        <p style={{fontSize: "12px"}}><strong>Disclaimer:</strong> All option prices, probabilities, and analytics shown on this site are estimates for informational 
+          purposes only and may not reflect real market prices.<br /> No content here constitutes financial advice.<br />
+          Always verify data independently before making investment decisions.
+        </p>
+        <strong>© 2025 Andreas Papas</strong>
+      </footer>
 
       {/* Heatmap */}
       {heatmapData.length > 0 && (
@@ -257,6 +303,26 @@ useEffect(() => {
           <h2 className="font-semibold mb-2 text-center">
             Chart:
           </h2>
+        <div className="flex items-center gap-2">
+  <label className="font-medium">Custom Range: </label>
+  <input
+    type="number"
+    value={rangeMin}
+    onChange={(e) => setRangeMin(parseFloat(e.target.value))}
+    placeholder="Min"
+    className="border rounded p-2 w-24"
+    style={{ width: "30px", height: "20px" }}
+  />
+  <span> - </span>
+  <input
+    type="number"
+    value={rangeMax}
+    onChange={(e) => setRangeMax(parseFloat(e.target.value))}
+    placeholder="Max"
+    className="border rounded p-2 w-24"
+    style={{ width: "30px", height: "20px" }}
+  />
+</div>
 
           <Plot
             data={[
