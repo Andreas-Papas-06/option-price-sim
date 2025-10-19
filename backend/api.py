@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 from backend import main
 from typing import Dict, List
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +10,7 @@ api = FastAPI()
 
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend
+    allow_origins=["http://localhost:3000"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,7 +22,7 @@ class ContractRequest(BaseModel):
     chain: Dict[str, List[dict]] 
 
 class HeatmapRequest(BaseModel):
-    contract: dict   # the contract returned earlier from /contract
+    contract: dict   
     option_type: str = "c"   # "c" for call, "p" for put
     range_max: float = 0
     range_min: float = 0
@@ -73,11 +74,13 @@ def generate_heatmap(req: HeatmapRequest):
             range_min=req.range_min
         )
 
-        df_reset = df.reset_index()
-        df_melted = df_reset.melt(id_vars=df.index.name or "index", var_name="x", value_name="z")
-        df_melted = df_melted.rename(columns={df.index.name or "index": "y"})
+        data = {
+            "index": df.index.tolist(),      # price levels
+            "columns": df.columns.tolist(),  # days to expiration
+            "values": df.values.tolist()     # 2D matrix of cell values
+        }
 
-        return df_melted.to_dict(orient="records")
+        return JSONResponse(content=data)
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error generating heatmap: {str(e)}")

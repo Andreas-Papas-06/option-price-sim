@@ -68,7 +68,7 @@ def get_options_chain(ticker):
     
     return all_calls, all_puts
 
-#calls, puts = get_options_chain("AMD")
+
 
 def get_contract(exp, strikep, chain):
     # [Underlying Price, Strike Price, Time to exp, Vol, intrest rate]
@@ -92,9 +92,7 @@ def get_contract(exp, strikep, chain):
                         "option_price": contract["Last Price"]
                     }
 
-# Get Contract from option chain    
-#contract = get_contract("2025-09-26", 180.0, calls)
-#print(contract)
+
 
 def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
     if time == 0:
@@ -110,8 +108,7 @@ def blackscholes(under_price, strike_price, time, vol, intrest, types='c'):
         print("ERROR")
     return price
 
-#p = blackscholes(166.62, 170, 3/365, 0.595, 0.0409)
-#print(p)
+
 
 def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, types='c', range_max=0, range_min=0):
     if time*365 < 51:
@@ -155,8 +152,7 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
     
     return df
 
-#chart = make_heat_map(**contract)
-#print(chart)
+
 
 
 

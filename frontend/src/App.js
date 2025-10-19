@@ -1,7 +1,6 @@
 // src/App.js
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Plot from "react-plotly.js";
 
 function App() {
   const [ticker, setTicker] = useState("");
@@ -10,18 +9,44 @@ function App() {
   const [selectedStrike, setSelectedStrike] = useState(null);
   const [selectedType, setSelectedType] = useState("calls");
   const [contract, setContract] = useState(null);
-  const [heatmapData, setHeatmapData] = useState([]);
+  const [heatmapData, setHeatmapData] = useState({
+    columns: [],
+    index: [],
+    values: [],
+  });
   const [loading, setLoading] = useState(false);
   const [rangeMin, setRangeMin] = useState(0);
   const [rangeMax, setRangeMax] = useState(0);
 
-
+const getColor = (val) => {
+    if (val < -90) return '#7b0202ff';
+    if (val < -75) return '#aa0202ff';
+    if (val < -50) return '#c60202ff';
+    if (val < -30) return '#ef1e1eff';
+    if (val < -15) return '#f24848ff';
+    if (val < -7) return '#f97575ff'  ;
+    if (val < -3) return '#fdababff';
+    if (val < 3) return '#ffffff';
+    if (val < 7) return '#b1f6beff';
+    if (val < 15) return '#98f793ff';
+    if (val < 30) return '#7df77bff';
+    if (val < 50) return '#3df756ff';
+    if (val < 75) return '#12c02cff';
+    if (val < 100) return '#04a91dff';
+    if (val >= 100) return '#038120ff';
+    return "white";
+  };
 // Clear contract & heatmap when user changes selections
 useEffect(() => {
   setContract(null);
-  setHeatmapData([]);
+  setHeatmapData({
+    columns: [],
+    index: [],
+    values: [],
+  });
+  setRangeMin(0); 
+  setRangeMax(0);
 }, [selectedExp, selectedStrike, selectedType]);
-
   const fetchOptions = async () => {
     setLoading(true);
     try {
@@ -30,7 +55,7 @@ useEffect(() => {
       setSelectedExp("");
       setSelectedStrike(null);
       setContract(null);
-      setHeatmapData([]);
+      setHeatmapData({ columns: [], index: [], values: [] });
     } catch (err) {
       console.error(err);
       alert("Error fetching option chain: " + (err.response?.data?.detail || err.message));
@@ -56,70 +81,32 @@ useEffect(() => {
 
   // Generate heatmap
   const fetchHeatmap = async () => {
-    if (!contract) {
-      alert("No contract selected!");
-      return;
-    }
-
-    try {
-      const res = await axios.post("http://127.0.0.1:8000/heatmap", {
-        contract: contract,
-        option_type: selectedType === "calls" ? "c" : "p",
-        range_max: rangeMax,
-        range_min: rangeMin,
-      });
-
-      console.log("Heatmap raw data:", res.data);
-
-      // Defensive: ensure x,y,z are numbers (Plotly / sorting needs numeric types)
-      const numericData = Array.isArray(res.data)
-        ? res.data.map((d) => ({
-            x: Number(d.x),
-            y: Number(d.y),
-            z: Number(d.z),
-          }))
-        : [];
-
-      setHeatmapData(numericData);
-    } catch (err) {
-      console.error(err);
-      alert("Error generating heatmap: " + (err.response?.data?.detail || err.message));
-    }
-  };
-
-  // helper for building z matrix
-  function buildGrid(data) {
-    // extract sorted unique x and y
-    const xVals = [...new Set(data.map((d) => d.x))].sort((a, b) => b - a);
-    const yVals = [...new Set(data.map((d) => d.y))].sort((a, b) => a - b);
-
-    // build z matrix where rows correspond to y (same order as yVals)
-    const z = yVals.map((y) =>
-      xVals.map((x) => {
-        const pt = data.find((p) => p.x === x && p.y === y);
-        return pt ? pt.z : null;
-      })
-    );
-
-    return { xVals, yVals, z };
+  if (!contract) {
+    alert("No contract selected!");
+    return;
   }
 
-  // simple color scaling - Plotly will show its own colorscale but you can override
-  const colorscale = [
-    [0, "rgba(156, 35, 1, 1)"],
-    [0.2, "rgba(224, 34, 5, 1)"],
-    [0.4, "rgba(251, 111, 111, 1)"],
-    [0.5, "rgba(250, 250, 247, 1)"],
-    [0.6, "rgba(175, 244, 180, 1)"],
-    [0.8, "rgba(152, 247, 123, 1)"],
-    [1, "rgba(6, 215, 23, 1)"],
-  ];
+  try {
+    const res = await axios.post("http://127.0.0.1:8000/heatmap", {
+      contract: contract,
+      option_type: selectedType === "calls" ? "c" : "p",
+      range_max: rangeMax,
+      range_min: rangeMin,
+    });
 
-  // Render layout
-  const { xVals, yVals, z } = heatmapData.length ? buildGrid(heatmapData) : { xVals: [], yVals: [], z: [] };
+    setHeatmapData(res.data); // this is the {index, columns, values} JSON
+  } catch (err) {
+    console.error(err);
+    alert("Error generating heatmap: " + (err.response?.data?.detail || err.message));
+  }
+};
+
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div
+    className="p-6 max-w-5xl mx-auto"
+    style={{ paddingBottom: "120px" }}  // 👈 prevents footer overlap
+  >
       {/* Header */}
       
       <header style={{ position: "relative", width: "1600px", height: "160px" }}>
@@ -144,7 +131,7 @@ useEffect(() => {
     }} 
   />
 </header>
-      <p style={{fontSize: "10px"}}>*All data is 15 minutes delayed*</p>
+      <p style={{fontSize: "10px", marginbottom: '3px'}}>*All data is 15 minutes delayed*</p>
       {/* Stock Ticker */}
       <div className="flex flex-col items-center mt-4">
         <h2>Stock Ticker:</h2>
@@ -276,7 +263,7 @@ useEffect(() => {
       {contract && (
         <div className="flex flex-col items-center mb-4 border p-3 rounded bg-gray-100 mt-6 w-full max-w-lg mx-auto">
           <h2 className="font-semibold mb-2">Contract Info:</h2>
-          <p><strong>Contract: {ticker} ${selectedStrike} {selectedExp} {selectedType}</strong></p>
+          <p><strong>Contract: ${selectedStrike} {selectedExp} {selectedType}</strong></p>
           
 
           <button
@@ -289,7 +276,7 @@ useEffect(() => {
         </div> 
       )}
 
-      <footer style={{ position: "fixed", bottom: "0", width: "1600px", height: "100px", background: "#8554ffff" }}>
+      <footer style={{ position: "fixed", bottom: "0", width: "100%", height: "100px", background: "#8554ffff" }}>
         <p style={{fontSize: "12px"}}><strong>Disclaimer:</strong> All option prices, probabilities, and analytics shown on this site are estimates for informational 
           purposes only and may not reflect real market prices.<br /> No content here constitutes financial advice.<br />
           Always verify data independently before making investment decisions.
@@ -298,59 +285,68 @@ useEffect(() => {
       </footer>
 
       {/* Heatmap */}
-      {heatmapData.length > 0 && (
+            {heatmapData.values.length > 0 && (
         <div className="w-full h-[600px] bg-white shadow-md rounded-lg p-4 mt-6">
-          <h2 className="font-semibold mb-2 text-center">
-            Chart:
-          </h2>
-        <div className="flex items-center gap-2">
-  <label className="font-medium">Custom Range: </label>
-  <input
-    type="number"
-    value={rangeMin}
-    onChange={(e) => setRangeMin(parseFloat(e.target.value))}
-    placeholder="Min"
-    className="border rounded p-2 w-24"
-    style={{ width: "30px", height: "20px" }}
-  />
-  <span> - </span>
-  <input
-    type="number"
-    value={rangeMax}
-    onChange={(e) => setRangeMax(parseFloat(e.target.value))}
-    placeholder="Max"
-    className="border rounded p-2 w-24"
-    style={{ width: "30px", height: "20px" }}
-  />
-</div>
+          <h2 className="font-semibold mb-2 text-center">Chart:</h2>
 
-          <Plot
-            data={[
-              {
-                z: z,
-                x: xVals,
-                y: yVals,
-                type: "heatmap",
-                colorscale: colorscale,
-                zsmooth: "best",
-                hovertemplate:
-                  "Days: %{x}<br>Price: %{y}<br>Z: %{z}<extra></extra>",
-              },
-            ]}
-            layout={{
-              autosize: true,
-              margin: { t: 40, r: 40, l: 60, b: 60 },
-              xaxis: { title: "Days to Expiration" },
-              yaxis: { title: "Underlying Price" },
-            }}
-            style={{ width: "100%", height: "100%" }}
-            useResizeHandler={true}
-          />
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Custom Range: </label>
+            <input
+              type="number"
+              value={rangeMin}
+              onChange={(e) => setRangeMin(parseFloat(e.target.value))}
+              placeholder="Min"
+              className="border rounded p-2 w-24"
+              style={{ width: "30px", height: "20px" }}
+            />
+            <span> - </span>
+            <input
+              type="number"
+              value={rangeMax}
+              onChange={(e) => setRangeMax(parseFloat(e.target.value))}
+              placeholder="Max"
+              className="border rounded p-2 w-24"
+              style={{ width: "30px", height: "20px" }}
+            />
+          </div>
+
+          <div className="overflow-x-auto mt-6">
+            <table className="border-collapse text-xs" style={{bordercollapse: "collapse", borderSpacing: 1}}>
+              <thead>
+                <tr>
+                  <th style={{backgroundColor: "#dcdadaff"}}>Days → Price ↓</th>
+                  {heatmapData.columns.map((col, i) => (
+                    <th key={i} style={{backgroundColor: "#dcdadaff"}}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {heatmapData.index.map((price, i) => (
+                  <tr key={i}>
+                    <td style={{backgroundColor: "#dcdadaff"}}>{price}</td>
+                    {heatmapData.values[i].map((val, j) => (
+                      <td
+                        key={j}
+                        style={{
+                          backgroundColor: getColor(val),
+                          border: "none",
+                          textAlign: "center",
+                          padding: "3px",
+                        }}
+                      >
+                        {val.toFixed(1)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
-    </div>
-  );
-}
+    </div> 
+  );         
+}   
 
 export default App;
 
