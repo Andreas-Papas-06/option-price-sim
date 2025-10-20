@@ -20,12 +20,12 @@ api = FastAPI()
     #allow_headers=["*"],
 #)
 # Mount the React build folder as static files
-api.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
+api.mount("/static", StaticFiles(directory="/frontend/build/static"), name="static")
 
 # Serve index.html for all other paths (React routing)
 @api.get("/{full_path:path}")
 def serve_react_app(full_path: str):
-    index_path = os.path.join("../frontend/build", "index.html")
+    index_path = os.path.join("/frontend/build", "index.html")
     return FileResponse(index_path)
 
 class ContractRequest(BaseModel):
