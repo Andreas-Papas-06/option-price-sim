@@ -51,7 +51,7 @@ useEffect(() => {
   const fetchOptions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/options/${ticker}`);
+      const res = await axios.get(`${API_URL}/api/options/${ticker}`);
       setOptionChain(res.data);
       setSelectedExp("");
       setSelectedStrike(null);
@@ -68,7 +68,7 @@ useEffect(() => {
   // Pick a contract
   const fetchContract = async () => {
     try {
-      const res = await axios.post('${API_URL}/contract', {
+      const res = await axios.post('${API_URL}/api/contract', {
         exp: selectedExp,
         strike: selectedStrike,
         chain: optionChain[selectedType],
@@ -88,7 +88,7 @@ useEffect(() => {
   }
 
   try {
-    const res = await axios.post("${API_URL}/heatmap", {
+    const res = await axios.post('${API_URL}/api/heatmap', {
       contract: contract,
       option_type: selectedType === "calls" ? "c" : "p",
       range_max: rangeMax,
