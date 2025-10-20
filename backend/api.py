@@ -4,17 +4,28 @@ from fastapi.responses import JSONResponse
 from backend import main
 from typing import Dict, List
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 
 api = FastAPI()
 
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+#api.add_middleware(
+   # CORSMiddleware,
+    #allow_origins=["http://localhost:3000"],  
+    #allow_credentials=True,
+    #allow_methods=["*"],
+    #allow_headers=["*"],
+#)
+# Mount the React build folder as static files
+api.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
+
+# Serve index.html for all other paths (React routing)
+@api.get("/{full_path:path}")
+def serve_react_app(full_path: str):
+    index_path = os.path.join("../frontend/build", "index.html")
+    return FileResponse(index_path)
 
 class ContractRequest(BaseModel):
     exp: str
@@ -27,11 +38,11 @@ class HeatmapRequest(BaseModel):
     range_max: float = 0
     range_min: float = 0
 
-@api.get('/')
+@api.get('/api/')
 def root():
     return {'message':"API RUNNING"}
 
-@api.get('/options/{ticker}')
+@api.get('/api/options/{ticker}')
 def get_option_chain(ticker: str):
     try:
         calls, puts = main.get_options_chain(ticker)
@@ -48,7 +59,7 @@ def get_option_chain(ticker: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid ticker or error fetching options: {str(e)}")
 
-@api.post('/contract')
+@api.post('/api/contract')
 def get_contract(req: ContractRequest):
     try:
         contract = main.get_contract(req.exp, req.strike, req.chain)
@@ -57,7 +68,7 @@ def get_contract(req: ContractRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error fetching contract: {str(e)}")
     
-@api.post('/heatmap')
+@api.post('/api/heatmap')
 def generate_heatmap(req: HeatmapRequest):
     try:
         contract = req.contract

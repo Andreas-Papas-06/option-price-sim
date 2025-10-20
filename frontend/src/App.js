@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "";
 function App() {
   const [ticker, setTicker] = useState("");
   const [optionChain, setOptionChain] = useState(null);
@@ -50,7 +51,7 @@ useEffect(() => {
   const fetchOptions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/options/${ticker}`);
+      const res = await axios.get(`${API_URL}/options/${ticker}`);
       setOptionChain(res.data);
       setSelectedExp("");
       setSelectedStrike(null);
@@ -67,7 +68,7 @@ useEffect(() => {
   // Pick a contract
   const fetchContract = async () => {
     try {
-      const res = await axios.post("http://127.0.0.1:8000/contract", {
+      const res = await axios.post('${API_URL}/contract', {
         exp: selectedExp,
         strike: selectedStrike,
         chain: optionChain[selectedType],
@@ -87,7 +88,7 @@ useEffect(() => {
   }
 
   try {
-    const res = await axios.post("http://127.0.0.1:8000/heatmap", {
+    const res = await axios.post("${API_URL}/heatmap", {
       contract: contract,
       option_type: selectedType === "calls" ? "c" : "p",
       range_max: rangeMax,
