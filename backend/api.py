@@ -30,6 +30,11 @@ if STATIC_DIR.exists():
 else:
     print(f"Static directory not found: {STATIC_DIR}")
 
+MEDIA_DIR = BUILD_DIR / "media"
+
+if MEDIA_DIR.exists():
+    api.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
+
 # Serve index.html for all other paths (React routing)
 @api.get("/{full_path:path}")
 def serve_react_app(full_path: str):

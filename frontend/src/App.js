@@ -106,7 +106,7 @@ useEffect(() => {
   return (
     <div
     className="p-6 max-w-5xl mx-auto"
-    style={{ paddingBottom: "120px" }}  // 👈 prevents footer overlap
+    style={{ paddingBottom: "120px" }}  
   >
       {/* Header */}
       
