@@ -38,7 +38,14 @@ if MEDIA_DIR.exists():
 # Serve index.html for all other paths (React routing)
 @api.get("/{full_path:path}")
 def serve_react_app(full_path: str):
+    # Skip API paths
+    if full_path.startswith("api"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+
     index_path = BUILD_DIR / "index.html"
+    if not index_path.exists():
+        return {"error": "index.html not found"}
+
     return FileResponse(index_path)
 
 class ContractRequest(BaseModel):

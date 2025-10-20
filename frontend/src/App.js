@@ -88,7 +88,7 @@ useEffect(() => {
   }
 
   try {
-    const res = await axios.post('$/api/heatmap', {
+    const res = await axios.post('/api/heatmap', {
       contract: contract,
       option_type: selectedType === "calls" ? "c" : "p",
       range_max: rangeMax,
