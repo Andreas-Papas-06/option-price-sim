@@ -33,7 +33,7 @@ else:
 # Serve index.html for all other paths (React routing)
 @api.get("/{full_path:path}")
 def serve_react_app(full_path: str):
-    index_path = os.path.join("/frontend/build", "index.html")
+    index_path = BUILD_DIR / "index.html"
     return FileResponse(index_path)
 
 class ContractRequest(BaseModel):
