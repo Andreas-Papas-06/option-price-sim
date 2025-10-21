@@ -1,4 +1,4 @@
-// src/App.js
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -95,7 +95,7 @@ useEffect(() => {
       range_min: rangeMin,
     });
 
-    setHeatmapData(res.data); // this is the {index, columns, values} JSON
+    setHeatmapData(res.data); 
   } catch (err) {
     console.error(err);
     alert("Error generating heatmap: " + (err.response?.data?.detail || err.message));

@@ -117,7 +117,6 @@ def make_heat_map(under_price, strike_price, time, vol, intrest, option_price, t
         step = round(time*365/50)
         cols = list(range(round(time*365), -1, -step))
     
-    # Rows: 30 prices, each +1% increase from previous, bottom = price
     if time*365 <= 30:
         percent_inc = 1.005
         percent_dec = 0.995

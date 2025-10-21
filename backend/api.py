@@ -12,16 +12,8 @@ import os
 
 api = FastAPI()
 
-#api.add_middleware(
-   # CORSMiddleware,
-    #allow_origins=["http://localhost:3000"],  
-    #allow_credentials=True,
-    #allow_methods=["*"],
-    #allow_headers=["*"],
-#)
-# Mount the React build folder as static files
-# Serve index.html for all other paths (React routing)
-BASE_DIR = Path(__file__).resolve().parent.parent  # /app/backend → /app
+
+BASE_DIR = Path(__file__).resolve().parent.parent  
 BUILD_DIR = BASE_DIR / "frontend" / "build"
 STATIC_DIR = BUILD_DIR / "static"
 
@@ -96,9 +88,9 @@ def generate_heatmap(req: HeatmapRequest):
         )
 
         data = {
-            "index": df.index.tolist(),      # price levels
-            "columns": df.columns.tolist(),  # days to expiration
-            "values": df.values.tolist()     # 2D matrix of cell values
+            "index": df.index.tolist(),      
+            "columns": df.columns.tolist(),  
+            "values": df.values.tolist()     
         }
 
         return JSONResponse(content=data)
@@ -108,7 +100,6 @@ def generate_heatmap(req: HeatmapRequest):
     
 @api.get("/{full_path:path}")
 def serve_react_app(full_path: str):
-    # Skip API paths
     if full_path.startswith("api"):
         raise HTTPException(status_code=404, detail="API endpoint not found")
 
